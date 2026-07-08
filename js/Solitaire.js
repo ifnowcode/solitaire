@@ -38,7 +38,7 @@ class Solitaire extends CardGame {
 
   render() {
     super.render();
-    this.drawDebugOverlay(this.ctx);
+    if (debug) this.drawDebugOverlay(this.ctx);
   }
 
   //

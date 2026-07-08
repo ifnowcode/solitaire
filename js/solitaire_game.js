@@ -1,3 +1,5 @@
+let debug = true;
+
 let game = new Solitaire();
 start();
 
