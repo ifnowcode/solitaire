@@ -1,5 +1,3 @@
-let debug = true;
-
 let game = new Solitaire();
 start();
 
@@ -17,14 +15,14 @@ async function start() {
   await game.reset().then(() => {
     game.setupZones(); // should only be done once
     game.render();
-    consoleLog("Game Ready!");
+    if (tracedebug) console.log("Game Ready!");
   });
 }
 
 async function reset() {
   await game.reset().then(() => {
     game.render();
-    consoleLog("Game Ready!");
+    if (tracedebug) console.log("Game Ready!");
   });
 }
 

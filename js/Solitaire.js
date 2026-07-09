@@ -1,3 +1,5 @@
+let dragstack_on = true;
+
 class Solitaire extends CardGame {
   constructor() {
     super();
@@ -38,13 +40,8 @@ class Solitaire extends CardGame {
 
   render() {
     super.render();
-    if (debug) this.drawDebugOverlay(this.ctx);
+    if (debugoverlay) this.drawDebugOverlay(this.ctx);
   }
-
-  //
-  // AI
-  //
-
 
   //
   // Undo
@@ -52,7 +49,7 @@ class Solitaire extends CardGame {
 
   pushUndo(action) {
     this.undoStack.push(action);
-    consoleLog("Push:", action);
+    //if (tracedebug) console.log("Push:", action);
   }
 
   popUndo() {
@@ -61,7 +58,7 @@ class Solitaire extends CardGame {
 
   undoLastAction() {
     const action = this.popUndo();
-    consoleLog("Undo Action:", this.undoStack.length, action);
+    if (tracedebug) console.log("Undo Action:", this.undoStack.length, action);
     if (!action) return;
 
     switch (action.type) {
@@ -118,73 +115,52 @@ class Solitaire extends CardGame {
     super.keyDown(e);
     const key = e.key.toUpperCase();
     //e.preventDefault();
-    //consoleLog("Key down", e);
+    //if (tracedebug) console.log("Key down", e);
     if (e.key === 'Escape') {
-      //consoleLog("Esc Key down", e);
+      //if (tracedebug) console.log("Esc Key down", e);
       this.cancelDrag();
     } else if (e.key.length === 1 && key === 'D') {
-      //consoleLog("D key down", e);
+      //if (tracedebug) console.log("D key down", e);
       console.group("Dump");
-      consoleLog("Game cards:", this.cards);
-      //consoleLog("Game:", this.game.cards);
+      if (tracedebug) console.log("Game cards:", this.cards);
+      //if (tracedebug) console.log("Game:", this.game.cards);
       console.groupEnd();
     }
   }
-  
-  /*
-  mouseDown_stack(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    // Check from topmost card down
-    for (let i = this.cards.length - 1; i >= 0; i--) {
-      const card = this.cards[i];
-      if (card.isUnder(mouseX, mouseY)) {
-        const zone = card.originZone;
-        consoleLog("Get Zone", zone, zone.getStackFrom);
-        if (zone && zone.getStackFrom) {
-          this.draggingStack = zone.getStackFrom(card);
-          consoleLog("Dragging stack", this.draggingStack);
-          this.draggingStack.forEach(c => c.dragging = true);
-          this.draggingCard = card;
-        } else {
-          super.mouseDown(e);
-        }
-        break;
-      }
-    }
-  }
-  */
 
   mouseDown(e) {
-    //consoleLog("Card Game Mouse Down !!!!");
     const rect = this.canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    // Check from topmost card down
+
     for (let i = this.cards.length - 1; i >= 0; i--) {
       const card = this.cards[i];
       if (card.isUnder(mouseX, mouseY)) {
         const zone = card.originZone;
         this.offsetX = mouseX - card.x;
         this.offsetY = mouseY - card.y;
-        if (false && zone && zone.name.startsWith("tableau") && zone.getStackFrom) {
+
+        if (dragstack_on && zone && zone.name.startsWith("tableau") && zone.getStackFrom) {
           this.draggingStack = zone.getStackFrom(card);
-          consoleLog("CG: Dragging stack", this.draggingStack);
-          this.draggingStack.forEach(c => c.dragging = true);
           this.draggingCard = card;
+
+          // mark and bring stack to front
+          this.draggingStack.forEach(c => {
+            c.dragging = true;
+            array_bring_to_front(this.cards.indexOf(c), this.cards);
+            // remove from origin zone while dragging
+            array_remove(c, zone.cards);
+          });
+
         } else {
           card.dragging = true;
           this.draggingCard = card;
           array_bring_to_front(i, this.cards);
-          consoleLog("CG: Dragging card:", this.draggingCard);
-          if (card.originZone.name.startsWith("deck") || card.originZone.name.startsWith("waste")) break;
-          //consoleLog("CG: Equality", this.draggingCard.originZone.cards === this.draggingCard.originZone.cards);
-          //consoleLog("CG: Card in originZone.cards?", this.draggingCard.originZone.cards.some(c => c.id === this.draggingCard.id));
-          if (this.draggingCard.originZone.cards.includes(this.draggingCard)) {
-            //consoleLog("CG: Remove Dragging Card from", this.draggingCard.originZone.name);
-            array_remove(this.draggingCard, this.draggingCard.originZone.cards);
+
+          if (!card.originZone.name.startsWith("deck") &&
+              !card.originZone.name.startsWith("waste") &&
+              card.originZone.cards.includes(card)) {
+            array_remove(card, card.originZone.cards);
           }
         }
         break;
@@ -197,7 +173,7 @@ class Solitaire extends CardGame {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     this.updateHovered(mouseX, mouseY);
-    if (false && this.draggingStack) {
+    if (dragstack_on && this.draggingStack) {
       this.draggingStack.forEach((card, i) => {
         card.x = mouseX - this.offsetX;
         card.y = mouseY - this.offsetY + i * 30; // stagger vertical spacing
@@ -208,80 +184,70 @@ class Solitaire extends CardGame {
     }
   }
 
-   mouseUp(e) {
-    console.log("Card Game Mouse Up !!!!");
-    if (false && this.draggingStack) {
+  mouseUp(e) {
+    //if (tracedebug) console.log("Card Game Mouse Up !!!!");
+
+    if (dragstack_on && this.draggingStack) {
       const rect = this.canvas.getBoundingClientRect();
-      for (let zone of game.zones) {
-        if (zone.containsPoint(rect.left - this.offsetX, rect.top - this.offsetY) &&
-            zone.canAcceptStack && zone.canAcceptStack(this.draggingStack)) {
-          zone.acceptStack(this.draggingStack);
-          this.draggingStack = null;
-          this.render();
-          return;
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      let snapped = false;
+
+      for (let zone of this.zones) {
+        // use same style as single-card: zone.contains + canAccept(top card)
+        if (zone.contains(this.draggingStack[0]) &&
+            zone.canAccept(this.draggingStack[0])) {
+
+          for (let card of this.draggingStack) {
+            zone.snapCard(card);
+            card.dragging = false;
+          }
+          snapped = true;
+          break;
         }
       }
-      // Snap back if rejected
-      if (this.draggingStack[0].originZone) {
-        this.draggingStack.forEach(card => {
-          this.draggingStack[0].originZone.snapCard(card);
-        });
+
+      if (!snapped) {
+        // snap back to origin
+        const origin = this.draggingStack[0].originZone;
+        if (origin) {
+          this.draggingStack.forEach(card => {
+            origin.snapCard(card);
+            card.dragging = false;
+          });
+        }
       }
 
       this.draggingStack = null;
+      this.draggingCard = null;
       this.render();
-    } else if (this.draggingCard) {
+      return;
+    }
+
+    // existing single-card logic
+    if (this.draggingCard) {
       let snapped = false;
       for (let zone of this.zones) {
-        //consoleLog("Contains:", zone.contains(this.draggingCard), zone.canAccept(this.draggingCard), zone);
         if (zone.contains(this.draggingCard) && zone.canAccept(this.draggingCard)) {
-          consoleLog("Accepting:", zone.contains(this.draggingCard), zone.canAccept(this.draggingCard), zone);
           zone.snapCard(this.draggingCard);
-          //consoleLog("Cards length:", this.cards.length, this.deck.cards.length);
           snapped = true;
           break;
         }
       }
       if (!snapped) {
-        // move back
         this.draggingCard.x = this.draggingCard.originZone.x;
-        this.draggingCard.y = this.draggingCard.originZone.y + this.draggingCard.originZone.cards.length * this.draggingCard.originZone.stagger;
+        this.draggingCard.y =
+          this.draggingCard.originZone.y +
+          this.draggingCard.originZone.cards.length *
+          this.draggingCard.originZone.stagger;
         this.draggingCard.originZone.add(this.draggingCard);
-        consoleLog("Card Not Snapped!");
       }
       this.draggingCard.dragging = false;
       this.draggingCard = null;
       this.render();
     }
   }
-
-  /*
-  mouseUp(e) {
-    if (this.draggingStack) {
-      const rect = this.canvas.getBoundingClientRect();
-      for (let zone of game.zones) {
-        if (zone.containsPoint(rect.left - this.offsetX, rect.top - this.offsetY) &&
-            zone.canAcceptStack && zone.canAcceptStack(this.draggingStack)) {
-          zone.acceptStack(this.draggingStack);
-          this.draggingStack = null;
-          this.render();
-          return;
-        }
-      }
-      // Snap back if rejected
-      if (this.draggingStack[0].originZone) {
-        this.draggingStack.forEach(card => {
-          this.draggingStack[0].originZone.snapCard(card);
-        });
-      }
-
-      this.draggingStack = null;
-      this.render();
-    } else {
-      super.mouseUp(e);
-    }
-  }
-  */
 
   updateHovered(mouseX, mouseY) {
     this.hoveredCard = null;
@@ -292,21 +258,21 @@ class Solitaire extends CardGame {
       const card = this.cards[i];
       if (card.containsPoint && card.containsPoint(mouseX, mouseY)) {
         this.hoveredCard = card;
-        //consoleLog("1 Update hover card", card);
+        //if (tracedebug) console.log("1 Update hover card", card);
         break;
       }
     }
 
     for (let zone of game.zones) {
       if (zone.containsPoint && zone.containsPoint(mouseX, mouseY)) {
-        //consoleLog("Update hover zone", zone);
+        //if (tracedebug) console.log("Update hover zone", zone);
         this.hoveredZone = zone;
       }
       for (let i = zone.cards.length - 1; i >= 0; i--) {
         const card = zone.cards[i];
         if (card.containsPoint && card.containsPoint(mouseX, mouseY)) {
           this.hoveredCard = card;
-          //consoleLog("2 Update hover card", card);
+          //if (tracedebug) console.log("2 Update hover card", card);
           break;
         }
       }
@@ -328,7 +294,7 @@ class Solitaire extends CardGame {
     const hover = this.hoveredCard;
     const zone = this.hoveredZone;
     let active = false;
-    //consoleLog("Hover", hover, zone);
+    //if (tracedebug) console.log("Hover", hover, zone);
     for (let card of this.cards) {
       if (card === this.hoveredCard) {
         active = true;

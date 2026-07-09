@@ -1,6 +1,6 @@
 class Deck {
   constructor(cardWidth, cardHeight) {
-    consoleLog("New Deck:", cardWidth, cardHeight);
+    if (tracedebug) console.log("New Deck:", cardWidth, cardHeight);
     this.suits = ['diamond', 'heart', 'spade', 'club'];
     //this.values = Array.from({ length: 13 }, (_, i) => i + 1);
     this.values = Array.from({ length: 13 }, (_, i) => i + 2); // 2 through 14
@@ -23,12 +23,12 @@ class Deck {
   }
   
   getCardBack() {
-    //consoleLog("Get Card Back:", this.cardWidth, this.cardHeight);
+    //if (tracedebug) console.log("Get Card Back:", this.cardWidth, this.cardHeight);
     return this.back;
   }
   
   loadCardBack(fileName, callback) {
-    consoleLog("Load Card Back:", this.cardWidth, this.cardHeight);
+    if (tracedebug) console.log("Load Card Back:", this.cardWidth, this.cardHeight);
     const card = new Card(this, 'backs/' + fileName, null, null, this.cardWidth, this.cardHeight);
     card.loadImage(() => {
       this.loaded++;
@@ -46,7 +46,7 @@ class Deck {
         const name = `${suit}_${value}`;
         const card = new Card(this, name, suit, value === 14 ? 1 : value, this.cardWidth, this.cardHeight);
         card.loadPNG(() => {
-          //consoleLog("Push Card:", card);
+          //if (tracedebug) console.log("Push Card:", card);
           this.cards.push(card);
           this.loaded++;
           if (this.loaded === this.total + 1) {
@@ -59,7 +59,7 @@ class Deck {
   }
   
   async loadCardBackAsync(fileName) {
-    consoleLog("Load Card Back:", this.cardWidth, this.cardHeight);
+    if (tracedebug) console.log("Load Card Back:", this.cardWidth, this.cardHeight);
     const card = new Card(this, 'backs/' + fileName, null, null, this.cardWidth, this.cardHeight);
     await card.loadImageAsync();
     this.loaded++;
@@ -75,7 +75,7 @@ class Deck {
         const name = `${suit}_${value}`;
         const card = new Card(this, name, suit, value === 14 ? 1 : value, this.cardWidth, this.cardHeight);
         await card.loadPNGAsync();
-        //consoleLog("Push Card:", card);
+        //if (tracedebug) console.log("Push Card:", card);
         this.cards.push(card);
         this.loaded++;
         if (this.loaded === this.total + 1) {

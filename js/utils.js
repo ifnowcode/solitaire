@@ -1,4 +1,7 @@
-console.log("Loading Utilities ♠️ ♥️ ♦️ ♣️");
+let debugoverlay = false;
+let tracedebug = true;
+
+if (tracedebug) console.log("Loading Utilities ♠️ ♥️ ♦️ ♣️");
 
 const suitEmojis = {
   spade: "♠️",
@@ -54,6 +57,7 @@ function array_bring_to_front(index, array) {
   array.push(array.splice(index, 1)[0]);
 }
 
+/*
 function consoleLog(...args) {
   console.log(...args);
 }
@@ -65,3 +69,4 @@ function consoleWarn(...args) {
 function consoleError(...args) {
   console.error(...args);
 }
+*/

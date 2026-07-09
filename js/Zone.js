@@ -11,7 +11,7 @@ class Zone {
   }
 
   canAccept(card) {
-    //consoleLog("Accept?", false, card);
+    //if (tracedebug) console.log("Accept?", false, card);
     return false;
   }
 
@@ -35,7 +35,7 @@ class Zone {
   activateOriginTopCard(card) {
     if (card.originZone) {
       let cards = card.originZone.cards;
-      //consoleLog("Origin Cards:", cards);
+      //if (tracedebug) console.log("Origin Cards:", cards);
       if (cards.length > 0)
       {
         let c = cards[cards.length - 1];
@@ -53,7 +53,7 @@ class Zone {
     }
   }
 
-  move(card) {
+  move_dep(card) {
     this.removeCardFromOriginZone(card);
     if (card.originZone && card.originZone.name.startsWith("tableau")) {
       this.activateOriginTopCard(card);
@@ -62,8 +62,43 @@ class Zone {
     card.y = this.y + this.cards.length * this.stagger;
     card.originZone = this;
     this.add(card);
-    //consoleLog("Zone Snap Length:", this.cards.length);
+    //if (tracedebug) console.log("Zone Snap Length:", this.cards.length);
   }
+  
+  move(card) {
+    const origin = card.originZone;          // remember where it came from
+
+    this.removeCardFromOriginZone(card);
+
+    // Only flip if we are actually leaving a tableau for another zone
+    if (origin &&
+        origin !== this &&                  // not moving within same zone
+        origin.name.startsWith("tableau")) {
+
+      let cards = origin.cards;
+      if (cards.length > 0) {
+        let c = cards[cards.length - 1];
+
+        game.pushUndo({
+          type: 'flip',
+          card: c,
+          to: this,
+          from: origin,
+          x: c.x,
+          y: c.y
+        });
+
+        c.faceUp = true;
+        this.game.activate(c);
+      }
+    }
+
+    card.x = this.x;
+    card.y = this.y + this.cards.length * this.stagger;
+    card.originZone = this;
+    this.add(card);
+  }
+
 
   snapCard(card, spacing = 0) {
     
@@ -84,7 +119,7 @@ class Zone {
   }
 
   renderZone(ctx) {
-    //consoleLog("Draw Zone", this.x, this.y, this.width, this.height);
+    //if (tracedebug) console.log("Draw Zone", this.x, this.y, this.width, this.height);
     ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)'; // yellow with transparency
     ctx.lineWidth = 2;
     ctx.strokeRect(this.x, this.y, this.width, this.height);
@@ -116,7 +151,7 @@ class DeckZone extends Zone {
 
   render(ctx) {
     super.render();
-    //consoleLog("DeckZone:", this.game.deck.cards.length, this.game.deck.back.canvas);
+    //if (tracedebug) console.log("DeckZone:", this.game.deck.cards.length, this.game.deck.back.canvas);
     if (this.game.deck.cards.length > 0 && this.game.deck.back.canvas) {
       this.game.deck.back.x = this.x;
       this.game.deck.back.y = this.y;
@@ -126,7 +161,7 @@ class DeckZone extends Zone {
   
   drawCard() {
     const card = this.game.deck.drawCard();
-    console.log("Draw", card);
+    if (tracedebug) console.log("Draw", card);
     if (card) {
       card.faceUp = true;
       card.originZone = this;
@@ -168,7 +203,7 @@ class DiscardZone extends Zone {
 
   handleClick() {
     const topCard = this.cards[this.cards.length - 1];
-    consoleLog("Discard handle click", topCard, this.cards);
+    if (tracedebug) console.log("Discard handle click", topCard, this.cards);
     if (topCard) {
       game.pushUndo({
         type: 'return',
@@ -181,7 +216,7 @@ class DiscardZone extends Zone {
       
       this.returnCard(topCard);
     } else {
-      consoleLog("Discard is Not Top!", topCard, this.cards);
+      if (tracedebug) console.log("Discard is Not Top!", topCard, this.cards);
     }
   }
 }
@@ -189,7 +224,7 @@ class DiscardZone extends Zone {
 class FoundationZone extends Zone {
   canAccept(card) {
     const top = this.cards[this.cards.length - 1];
-    //consoleLog("Accept?", !top, card);
+    if (tracedebug) console.log("Accept?", !top, card);
     return !top ? card.value === 1 :
       card.suit === top.suit && card.value === top.value + 1;
   }
@@ -204,8 +239,8 @@ class TableauZone extends Zone {
     const top = this.cards[this.cards.length - 1];
 
     if (!top) {
-      consoleLog("King Me", card.value);
-      //consoleLog("Accept?", card.value === 13, card);
+      if (tracedebug) console.log("King Me", card.value);
+      if (tracedebug) console.log("Accept?", card.value === 13, card);
       return card.value === 13; // Only Kings can start empty tableau piles
     }
 
@@ -214,7 +249,7 @@ class TableauZone extends Zone {
       (this.isRed(card.suit) && !this.isRed(top.suit)) ||
       (!this.isRed(card.suit) && this.isRed(top.suit));
 
-    //consoleLog("Accept?", isOppositeColor && card.value === top.value - 1, card);
+    if (tracedebug) console.log("Accept?", isOppositeColor && card.value === top.value - 1, card);
     return isOppositeColor && card.value === top.value - 1;
   }
 

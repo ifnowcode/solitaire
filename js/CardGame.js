@@ -1,3 +1,10 @@
+class Foo {
+  constructor(bar=10, buz=10) {
+  }
+  async baz() {
+  }
+}
+
 class CardGame {
   constructor(cardWidth=100, cardHeight=140) {
     this.deck = new Deck(cardWidth, cardHeight);
@@ -10,14 +17,14 @@ class CardGame {
     this.hoveredCard = null;
     this.hoveredZone = null;
     this.canvas = document.getElementById('canvas');
-    consoleLog("Canvas initialized", this.canvas);
+    if (tracedebug) console.log("Canvas initialized", this.canvas);
     this.ctx = canvas.getContext('2d');
-    consoleLog("Context initialized", this.ctx);
+    if (tracedebug) console.log("Context initialized", this.ctx);
     this.canvas.addEventListener('mousedown', (e) => this.mouseDown(e));
     this.canvas.addEventListener('mousemove', (e) => this.mouseMove(e));
     this.canvas.addEventListener('mouseup', (e) => this.mouseUp(e));
     this.canvas.addEventListener('click', (e) => this.mouseClick(e));
-    this.canvas.addEventListener('dblclick', (e) => this.mouseDblClick(e));
+    //this.canvas.addEventListener('dblclick', (e) => this.mouseDblClick(e));
     document.addEventListener('keydown', (e) => this.keyDown(e));
   }
 
@@ -32,7 +39,7 @@ class CardGame {
   activate(card) {
     if (!this.cards.includes(card)) {
       this.cards.push(card);
-      //consoleLog("Activate:", this.cards.length, this.cards);
+      //if (tracedebug) console.log("Activate:", this.cards.length, this.cards);
     }
   }
   
@@ -40,7 +47,7 @@ class CardGame {
     const index = this.cards.indexOf(card);
     if (index !== -1) {
       this.cards.splice(index, 1);
-      //consoleLog("Deactivate:", this.cards.length, this.cards);
+      //if (tracedebug) console.log("Deactivate:", this.cards.length, this.cards);
     }
   }
 
@@ -51,7 +58,7 @@ class CardGame {
   drawCardDown() {
     const card = this.deck.drawRandomCard();
     if (!card) return;
-    consoleLog("Draw Card:", card);
+    if (tracedebug) console.log("Draw Card:", card);
     this.activate(card);
   }
 
@@ -59,7 +66,7 @@ class CardGame {
     const card = this.deck.drawRandomCard();
     if (!card) return;
     card.faceUp = true;
-    consoleLog("Draw Card:", card);
+    if (tracedebug) console.log("Draw Card:", card);
     this.activate(card);
   }
 
@@ -68,8 +75,8 @@ class CardGame {
     this.ctx.fillStyle = 'rgb(0,80,0)';
     this.ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (let card of this.cards) {
-      //consoleLog("Drawing Card:", card);
-      //consoleLog("Context", this.ctx);
+      //if (tracedebug) console.log("Drawing Card:", card);
+      //if (tracedebug) console.log("Context", this.ctx);
       card.render(this.ctx);
     }
     for (let zone of this.zones) {
@@ -86,21 +93,21 @@ class CardGame {
   cancelDrag() {
     if (this.draggingCard) this.draggingCard.dragging = false;
     this.draggingCard = null;
-    this.draggingStack.forEach(c => c.dragging = false);
+    if (this.draggingStack) this.draggingStack.forEach(c => c.dragging = false);
     this.draggingStack = null;
   }
 
   keyDown(e) {
     //e.preventDefault();
-    //consoleLog("Key down", e);
+    //if (tracedebug) console.log("Key down", e);
     if (e.key === 'Escape') {
-      //consoleLog("Esc Key down", e);
+      //if (tracedebug) console.log("Esc Key down", e);
       this.cancelDrag();
     }
   }
 
   mouseDown(e) {
-    //consoleLog("Card Game Mouse Down !!!!");
+    //if (tracedebug) console.log("Card Game Mouse Down !!!!");
     const rect = this.canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -114,11 +121,11 @@ class CardGame {
         card.dragging = true;
         this.draggingCard = card;
         array_bring_to_front(i, this.cards);
-        //consoleLog("CG: Dragging card:", this.draggingCard);
-        //consoleLog("CG: Equality", this.draggingCard.originZone.cards === this.draggingCard.originZone.cards);
-        //consoleLog("CG: Card in originZone.cards?", this.draggingCard.originZone.cards.some(c => c.id === this.draggingCard.id));
+        //if (tracedebug) console.log("CG: Dragging card:", this.draggingCard);
+        //if (tracedebug) console.log("CG: Equality", this.draggingCard.originZone.cards === this.draggingCard.originZone.cards);
+        //if (tracedebug) console.log("CG: Card in originZone.cards?", this.draggingCard.originZone.cards.some(c => c.id === this.draggingCard.id));
         //if (this.draggingCard.originZone.cards.includes(this.draggingCard)) {
-        //  consoleLog("CG: Remove Dragging Card from", this.draggingCard.originZone.name);
+        //  if (tracedebug) console.log("CG: Remove Dragging Card from", this.draggingCard.originZone.name);
         //  array_remove(this.draggingCard, this.draggingCard.originZone.cards);
         //}
         break;
@@ -127,12 +134,12 @@ class CardGame {
   }
 
   mouseUp(e) {
-    console.log("Card Game Mouse Up !!!!");
+    //console.log("Card Game Mouse Up !!!!");
     if (this.draggingCard) {
       for (let zone of this.zones) {
-        //consoleLog("Contains:", zone.contains(this.draggingCard), zone.canAccept(this.draggingCard), zone);
+        //if (tracedebug) console.log("Contains:", zone.contains(this.draggingCard), zone.canAccept(this.draggingCard), zone);
         if (zone.contains(this.draggingCard) && zone.canAccept(this.draggingCard)) {
-          consoleLog("Accepting:", zone.contains(this.draggingCard), zone.canAccept(this.draggingCard), zone);
+          if (tracedebug) console.log("Accepting:", zone.contains(this.draggingCard), zone.canAccept(this.draggingCard), zone);
           zone.snapCard(this.draggingCard);
           break;
         }
@@ -144,22 +151,23 @@ class CardGame {
   }
 
   mouseClick(e) {
-    console.log("Card Game Mouse Click !!!!");
+    //if (tracedebug) console.log("Card Game Mouse Click !!!!");
     const rect = this.canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
     for (let zone of game.zones) {
       if (zone.containsPoint?.(mouseX, mouseY) && zone.handleClick) {
-        //consoleLog("Click Zone", zone);
+        if (tracedebug) console.log("Click Zone", zone);
         zone.handleClick();
         break;
       }
     }
   }
-
+  
+  /*
   mouseDblClick(e) {
-    //consoleLog("Card Game Mouse DblClick !!!!");
+    if (tracedebug) console.log("Card Game Mouse DblClick !!!!");
     const rect = this.canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -176,9 +184,10 @@ class CardGame {
       }
     }
   }
-
+  */
+  
   mouseMove(e) {
-    //consoleLog("Card Game Mouse Move !!!!");
+    //if (tracedebug) console.log("Card Game Mouse Move !!!!");
     const rect = this.canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;

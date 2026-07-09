@@ -16,15 +16,15 @@ class Card {
     this.image = null;
     this.canvas = null;
     this.faceUp = false;
-    //consoleLog("Suit map:", suitEmojis);
+    //if (tracedebug) console.log("Suit map:", suitEmojis);
     this.emoji = `${suitValues[value]}${suitEmojis[suit]}`;
-    //consoleLog(JSON.stringify(this.emoji)); 
+    //if (tracedebug) console.log(JSON.stringify(this.emoji)); 
   }
 
   loadPNG(callback) {
     this.image = new Image();
     this.image.src = `./images/cards/${this.name}.png`;
-    //consoleLog("Loading:", this.image.src);
+    //if (tracedebug) console.log("Loading:", this.image.src);
     this.image.onload = () => {
       this.createCanvas();
       if (this.onReady) this.onReady(this); // signal it's ready
@@ -38,7 +38,7 @@ class Card {
   loadImage(callback) {
     this.image = new Image();
     this.image.src = `./images/${this.name}`;
-    //consoleLog("Loading:", this.image.src);
+    //if (tracedebug) console.log("Loading:", this.image.src);
     this.image.onload = () => {
       this.createCanvas();
       if (this.onReady) this.onReady(this); // signal it's ready
@@ -53,7 +53,7 @@ class Card {
     return new Promise((resolve, reject) => {
       this.image = new Image();
       this.image.src = `./images/cards/${this.name}.png`;
-      //consoleLog("Loading:", this.image.src);
+      //if (tracedebug) console.log("Loading:", this.image.src);
       this.image.onload = () => {
         this.createCanvas();
         resolve(this); // image is ready
@@ -69,7 +69,7 @@ class Card {
     return new Promise((resolve, reject) => {
       this.image = new Image();
       this.image.src = `./images/${this.name}`;
-      //consoleLog("Loading:", this.image.src);
+      //if (tracedebug) console.log("Loading:", this.image.src);
       this.image.onload = () => {
         this.createCanvas();
         resolve(this); // image is ready
@@ -95,14 +95,14 @@ class Card {
   render(ctx) {
     if (this.canvas) {
       if (this.faceUp) {
-        //consoleLog("Card Front:", ctx, this.canvas);
+        //if (tracedebug) console.log("Card Front:", ctx, this.canvas);
         ctx.drawImage(this.canvas, this.x, this.y);
       } else {
-        //consoleLog("Card Back:", ctx, this.deck.getCardBack().canvas);
+        //if (tracedebug) console.log("Card Back:", ctx, this.deck.getCardBack().canvas);
         ctx.drawImage(this.deck.getCardBack().canvas, this.x, this.y);
       }
     } else {
-      consoleLog("Card Canvas is null!", ctx);
+      if (tracedebug) console.log("Card Canvas is null!", ctx);
     }
   }
 
