@@ -1,5 +1,5 @@
 let debugoverlay = false;
-let tracedebug = true;
+let tracedebug = false;
 
 if (tracedebug) console.log("Loading Utilities ♠️ ♥️ ♦️ ♣️");
 
